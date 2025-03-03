@@ -1,0 +1,8 @@
+PLACEHOLDER FOR LAUNCH SCREEN BACKGROUND IMAGES
+
+To generate real launch screen background images, you need to:
+1. Install the canvas module on a system that supports native modules
+2. Run the generate-ios-icons.js script
+3. Copy the generated images to this directory
+
+For App Store submission, you will need properly sized launch screen background images.

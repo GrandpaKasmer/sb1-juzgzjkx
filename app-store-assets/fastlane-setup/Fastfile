@@ -1,0 +1,102 @@
+# Fastfile for TerraTime Grounds
+# Learn more at https://docs.fastlane.tools
+
+default_platform(:ios)
+
+# iOS lanes
+platform :ios do
+  desc "Build and upload a new beta build to TestFlight"
+  lane :beta do
+    # Increment build number
+    increment_build_number(
+      xcodeproj: "ios/TerraTimeGrounds.xcodeproj"
+    )
+    
+    # Build the app
+    build_app(
+      scheme: "TerraTimeGrounds",
+      workspace: "ios/TerraTimeGrounds.xcworkspace",
+      export_method: "app-store"
+    )
+    
+    # Upload to TestFlight
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true
+    )
+  end
+  
+  desc "Build an ad hoc distribution for direct testing"
+  lane :adhoc do
+    # Increment build number
+    increment_build_number(
+      xcodeproj: "ios/TerraTimeGrounds.xcodeproj"
+    )
+    
+    # Build the app
+    build_app(
+      scheme: "TerraTimeGrounds",
+      workspace: "ios/TerraTimeGrounds.xcworkspace",
+      export_method: "ad-hoc"
+    )
+    
+    # Optional: Upload to a distribution service
+    # firebase_app_distribution(...)
+  end
+end
+
+# Android lanes
+platform :android do
+  desc "Build and upload a new internal test build to Google Play"
+  lane :internal do
+    # Increment version code
+    increment_version_code(
+      gradle_file_path: "android/app/build.gradle"
+    )
+    
+    # Build the app
+    gradle(
+      task: "clean assembleRelease",
+      project_dir: "android/"
+    )
+    
+    # Upload to Google Play internal testing
+    upload_to_play_store(
+      track: "internal",
+      release_status: "completed"
+    )
+  end
+  
+  desc "Build APK for direct distribution"
+  lane :build_apk do
+    # Increment version code
+    increment_version_code(
+      gradle_file_path: "android/app/build.gradle"
+    )
+    
+    # Build the app
+    gradle(
+      task: "clean assembleRelease",
+      project_dir: "android/"
+    )
+    
+    # Optional: Upload to a distribution service
+    # firebase_app_distribution(...)
+  end
+end
+
+# Helper methods
+def increment_version_code(params)
+  gradle_file_path = params[:gradle_file_path]
+  current_version_code = get_version_code(gradle_file_path)
+  new_version_code = current_version_code + 1
+  
+  # Update the version code in the gradle file
+  sh "sed -i '' 's/versionCode #{current_version_code}/versionCode #{new_version_code}/g' #{gradle_file_path}"
+  
+  new_version_code
+end
+
+def get_version_code(gradle_file_path)
+  version_code = sh "grep -E 'versionCode [0-9]+' #{gradle_file_path} | grep -o '[0-9]\\+'"
+  version_code.to_i
+end
